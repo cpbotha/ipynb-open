@@ -2,6 +2,7 @@ from subprocess import Popen, PIPE, STDOUT
 import pty
 import os
 import re
+import requests
 import sys
 import webbrowser
 
@@ -16,11 +17,19 @@ def main():
     if os.path.isdir(full_path):
         # user has specified the notebook directory
         notebook_dir = full_path
+        notebook_basename = ''
+        notebook_basename_noext = ''
+
 
     else:
         # user has specified a notebook file, so we extract the dir
         notebook_dir = os.path.dirname(full_path)
+        notebook_basename = os.path.basename(full_path)
+        notebook_basename_noext = os.path.splitext(notebook_basename)[0]
 
+    open_existing = False
+
+    # try to find URL for this notebook directory in our history
     url = None
     try:
         with open(mapfile_path(), 'r') as mapfile:
@@ -38,14 +47,42 @@ def main():
         pass
 
     if url is not None:
-        # TODO: json get /notebooks, check if file is listed, if not, we start a new server also
-        if os.path.isdir(full_path):
-            full_url = url
+        # if the user specified a filename, double check that the server has it
+        if notebook_basename_noext:
+            try:
+                r = requests.get('%s%s' % (url, 'notebooks'))
+            except requests.exceptions.ConnectionError:
+                pass
+            else:
+                if r.status_code == 200:
+                    json = r.json()
+                    # use generator expression to find first notebook with the
+                    # requested filename
+                    existing_notebook = next(
+                        (e for e in r.json()
+                         if e['name'] == notebook_basename_noext), None)
+
+                    if existing_notebook is not None:
+                        open_existing = True
+
+                    else:
+                        # this means the notebook filename was not found, but this
+                        # could just mean the user is planning to start something
+                        # new. Have to try right?
+                        open_existing = True
+                        # act as if just the directory was specified
+                        notebook_basename = ''
 
         else:
-            # user specified ipynb file. ipython now has the shortcut
-            # url/notebookname.ipynb -- should open the correct notebook
-            full_url = '%s%s' % (url, os.path.basename(full_path))
+            # user specified a directory. we have to trust our map file and just
+            # try.
+            # TODO: tell the user that we have to jump with eyes closed
+            open_existing = True
+
+    if open_existing:
+        # this works in both cases: user specified directory, or user
+        # specified actual ipynb file.
+        full_url = '%s%s' % (url, notebook_basename)
 
         print "Found your notebook directory being served by %s" % (url,)
         print "Attempting to connect to %s" % (full_url,)

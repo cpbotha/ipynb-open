@@ -1,3 +1,11 @@
+# ipython_notebook_open aka ipno
+# script for attaching to existing ipython notebook servers at file open
+#
+# Copyright 2013 by Charl P. Botha <cpbotha@vxlabs.com>
+#
+
+from __future__ import print_function
+
 from subprocess import Popen, PIPE, STDOUT
 import pty
 import os
@@ -44,17 +52,20 @@ def main():
 
     except IOError:
         # file does not exist yet, so url remains None
-        pass
+        print("This is the first time you're using me.")
 
     if url is not None:
-        # if the user specified a filename, double check that the server has it
-        if notebook_basename_noext:
-            try:
-                r = requests.get('%s%s' % (url, 'notebooks'))
-            except requests.exceptions.ConnectionError:
-                pass
-            else:
-                if r.status_code == 200:
+        print("Found remembered URL %s for %s" % (url, full_path))
+
+        try:
+            r = requests.get('%s%s' % (url, 'notebooks'))
+
+        except requests.exceptions.ConnectionError:
+            print("No server running there.")
+
+        else:
+            if r.status_code == 200:
+                if notebook_basename_noext:
                     json = r.json()
                     # use generator expression to find first notebook with the
                     # requested filename
@@ -63,33 +74,35 @@ def main():
                          if e['name'] == notebook_basename_noext), None)
 
                     if existing_notebook is not None:
+                        print("Server knows about %s" % (notebook_basename_noext,))
                         open_existing = True
 
                     else:
-                        # this means the notebook filename was not found, but this
-                        # could just mean the user is planning to start something
-                        # new. Have to try right?
+                        # this means the notebook filename was not found, but
+                        # this could just mean the user is planning to start
+                        # something new. Have to try right?
+                        print("Server running, but no knowledge of %s" %
+                              (notebook_basename_noext))
                         open_existing = True
                         # act as if just the directory was specified
                         notebook_basename = ''
 
-        else:
-            # user specified a directory. we have to trust our map file and just
-            # try.
-            # TODO: tell the user that we have to jump with eyes closed
-            open_existing = True
+                else:
+                    # user specified directory
+                    print("Server running, possibly for directory %s" %
+                          (notebook_dir))
+                    open_existing = True
 
     if open_existing:
         # this works in both cases: user specified directory, or user
         # specified actual ipynb file.
         full_url = '%s%s' % (url, notebook_basename)
 
-        print "Found your notebook directory being served by %s" % (url,)
-        print "Attempting to connect to %s" % (full_url,)
+        print("Attempting to connect to %s" % (full_url,))
         webbrowser.open(full_url)
 
     else:
-
+        print("Starting new server for %s" % (full_path,))
         cmd = "ipython notebook %s" % (full_path,)
         master, slave = pty.openpty()
         p = Popen(cmd, shell=True, stdin=PIPE, stdout=slave, stderr=slave, close_fds=True)

@@ -33,7 +33,6 @@ def main():
         notebook_basename = ''
         notebook_basename_noext = ''
 
-
     else:
         # user has specified a notebook file, so we extract the dir
         notebook_dir = os.path.dirname(full_path)
@@ -87,15 +86,14 @@ def main():
                         # this could just mean the user is planning to start
                         # something new. Have to try right?
                         print("Server running, but no knowledge of %s" %
-                              (notebook_basename_noext))
-                        open_existing = True
-                        # act as if just the directory was specified
-                        notebook_basename = ''
+                              (notebook_basename_noext,))
+                        print("This is probably not the server you are looking for.")
 
                 else:
                     # user specified directory
-                    print("Server running, possibly for directory %s" %
-                          (notebook_dir))
+                    print("Server running, *possibly* for directory %s" %
+                          (notebook_dir,))
+                    print("Will attach to it.")
                     open_existing = True
 
     if open_existing:

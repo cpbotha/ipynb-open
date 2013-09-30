@@ -21,3 +21,13 @@ please let me know).
 
 Report issues on https://github.com/cpbotha/ipynb-open/issues and/or follow me
 on https://twitter.com/cpbotha.
+
+Installation
+------------
+
+The easiest and most convenient is to do::
+
+    sudo pip install git+https://github.com/cpbotha/ipynb-open.git
+
+Which will also put the `ipno` script in your `/usr/local/bin`. When you run
+`ipno` and it needs to run `ipython`, it just runs the one on your path.

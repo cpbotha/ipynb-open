@@ -14,6 +14,8 @@ import requests
 import sys
 import webbrowser
 
+VERSION = "0.1.0"
+
 
 def mapfile_path():
     home = os.path.expanduser('~')

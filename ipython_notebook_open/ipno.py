@@ -10,7 +10,6 @@ from subprocess import Popen, PIPE, STDOUT
 import pty
 import os
 import re
-import requests
 import sys
 import webbrowser
 
@@ -23,6 +22,10 @@ def mapfile_path():
 
 
 def main():
+    # have to have this import here, because setup.py wants to import this
+    # script on systems that have no requests installed yet.
+    import requests
+
     full_path = os.path.abspath(sys.argv[1])
     if os.path.isdir(full_path):
         # user has specified the notebook directory

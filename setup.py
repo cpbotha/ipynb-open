@@ -10,7 +10,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name="ipython_notebook_open",
+    name="ipython-notebook-open",
     version=ipno.VERSION,
     author="Charl P. Botha",
     author_email="cpbotha@vxlabs.com",
